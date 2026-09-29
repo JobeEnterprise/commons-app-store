@@ -2,7 +2,7 @@ manifestVersion: 1
 id: commons-paseo
 name: Paseo
 tagline: The control plane for coding agents
-icon: https://raw.githubusercontent.com/getpaseo/paseo/main/packages/website/public/logo.svg
+icon: https://raw.githubusercontent.com/getpaseo/paseo/main/packages/website/public/favicon.svg
 category: Development
 version: "0.10.1"
 port: 6767
