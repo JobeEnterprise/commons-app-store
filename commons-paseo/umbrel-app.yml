@@ -4,7 +4,7 @@ name: Paseo
 tagline: The control plane for coding agents
 icon: https://raw.githubusercontent.com/getpaseo/paseo/main/packages/website/public/logo.svg
 category: Development
-version: "1.0.0"
+version: "0.10.1"
 port: 6767
 description: >-
   Run any coding agent from anywhere. Self-hosted, multi-provider, open source.
