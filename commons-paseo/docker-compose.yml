@@ -1,0 +1,20 @@
+version: "3.7"
+
+services:
+
+  app_proxy:
+    environment:
+      APP_HOST: commons-paseo_server_1
+      APP_PORT: 6767
+    
+  server:
+    image: ghcr.io/getpaseo/paseo:latest
+    user: "1000:1000"
+    init: true
+    restart: unless-stopped
+    environment:
+      PASEO_PASSWORD: "change-me"
+      PASEO_WEB_UI_ENABLED: "true"
+    volumes:
+      - /home/umbrel/umbrel/app-data/paseo/paseo-home:/home/paseo
+      - /home/umbrel/umbrel/app-data/paseo/workspace:/workspace

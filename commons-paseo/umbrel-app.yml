@@ -1,0 +1,28 @@
+manifestVersion: 1
+id: commons-paseo
+name: Paseo
+tagline: The control plane for coding agents
+icon: https://raw.githubusercontent.com/getpaseo/paseo/main/packages/website/public/logo.svg
+category: Development
+version: "1.0.0"
+port: 6767
+description: >-
+  Run any coding agent from anywhere. Self-hosted, multi-provider, open source.
+
+  Paseo runs your coding agents on your Umbrel and gives you a mobile, desktop, web, and CLI client to drive them from anywhere.
+
+  Supports Claude Code, Codex, OpenCode, Pi, and 34+ more providers.
+
+developer: Paseo
+website: https://paseo.sh
+submitter: Paseo
+submission: https://github.com/getpaseo/paseo
+repo: https://github.com/getpaseo/paseo
+support: https://github.com/getpaseo/paseo/issues
+gallery: []
+releaseNotes: >-
+  Initial release.
+dependencies: []
+path: ""
+defaultUsername: ""
+defaultPassword: "change-me"
