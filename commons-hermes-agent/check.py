@@ -26,8 +26,9 @@ VALID_CATEGORIES = frozenset({
 STORE_ID = "commons"
 APP_ID = "commons-hermes-agent"
 
-# Upstream Hermes image (direct, not getumbrel wrapper).
-UPSTREAM_IMAGE = "ghcr.io/nousresearch/hermes-agent"
+# Upstream Hermes image (direct, not getumbrel wrapper). It lives on Docker Hub,
+# NOT ghcr.io — a ghcr.io/... path 403s on pull.
+UPSTREAM_IMAGE = "nousresearch/hermes-agent"
 
 
 def main(root: Path) -> int:
@@ -122,6 +123,15 @@ def main(root: Path) -> int:
         print("FAIL: no image on server/web service"); return 1
     if not image.startswith(UPSTREAM_IMAGE + ":"):
         print(f"FAIL: image {image!r} is not the upstream Hermes image ({UPSTREAM_IMAGE}:...)")
+        return 1
+    # The image lives on Docker Hub, not ghcr.io — a ghcr.io path 403s on pull.
+    if "ghcr.io" in image:
+        print(f"FAIL: image {image!r} points at ghcr.io, but the image is on Docker Hub")
+        return 1
+    # Tag AND digest together: the linter requires both, and a digest with no tag
+    # leaves nothing human-readable to review.
+    if "@sha256:" not in image:
+        print(f"FAIL: image {image!r} is not pinned with a @sha256: digest")
         return 1
 
     # --- environment must not reference getumbrel-wrapper-only vars ---

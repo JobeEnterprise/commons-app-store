@@ -58,8 +58,9 @@ releaseNotes: >-
   integration, and extensive hot-path performance work. Nothing in this window
   is skipped.
 
-  This Umbrel package uses the upstream image directly (ghcr.io/nousresearch/hermes-agent)
-  rather than getumbrel's wrapper, so it ships the latest code. The wrapper's
+  This Umbrel package uses the upstream image directly (Docker Hub
+  nousresearch/hermes-agent) rather than getumbrel's wrapper, so it ships the
+  latest code rather than the wrapper's stale v0.21.3. The wrapper's
   HERMES_UMBREL_APP_PROXY_AUTH hook is replaced with dashboard basic auth
   (username: admin, password: the Umbrel-displayed app password).
 
