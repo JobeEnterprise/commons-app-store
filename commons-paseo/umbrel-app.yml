@@ -1,9 +1,9 @@
-manifestVersion: 1
+manifestVersion: 1.1
 id: commons-paseo
 name: Paseo
 tagline: The control plane for coding agents
 icon: https://raw.githubusercontent.com/getpaseo/paseo/main/packages/website/public/favicon.svg
-category: Development
+category: developer
 version: "0.10.1"
 port: 6767
 description: >-

@@ -15,5 +15,5 @@ services:
       PASEO_PASSWORD: "change-me"
       PASEO_WEB_UI_ENABLED: "true"
     volumes:
-      - /home/umbrel/umbrel/app-data/paseo/paseo-home:/home/paseo
-      - /home/umbrel/umbrel/app-data/paseo/workspace:/workspace
+      - ${APP_DATA_DIR}/paseo-home:/home/paseo
+      - ${APP_DATA_DIR}/workspace:/workspace
