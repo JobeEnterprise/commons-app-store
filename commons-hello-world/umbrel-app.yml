@@ -1,0 +1,26 @@
+manifestVersion: 1
+id: commons-hello-world
+name: Hello World
+tagline: A sample app to get you started
+icon: https://svgur.com/i/mvA.svg
+category: Development
+version: "1.0.0"
+port: 4000
+description: >-
+  This is a sample app for the Commons App Store.
+  Replace it with your own app.
+
+developer: JobeEnterprise
+website: https://github.com/JobeEnterprise/commons-app-store
+submitter: JobeEnterprise
+submission: https://github.com/JobeEnterprise/commons-app-store
+repo: https://github.com/JobeEnterprise/commons-app-store
+support: https://github.com/JobeEnterprise/commons-app-store/issues
+gallery:
+  - https://i.imgur.com/yyVG0Jb.jpeg
+releaseNotes: >-
+  Initial release.
+dependencies: []
+path: ""
+defaultUsername: ""
+defaultPassword: ""
