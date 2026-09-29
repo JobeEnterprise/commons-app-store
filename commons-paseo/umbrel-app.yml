@@ -1,5 +1,5 @@
 manifestVersion: 1
-id: paseo
+id: commons-paseo
 category: developer
 name: Paseo
 version: "0.10.1"
@@ -18,8 +18,8 @@ description: >-
   **No agents are bundled.** Paseo manages agent CLIs, it doesn't ship one.
   Install at least one yourself before the app is useful, then authenticate it:
 
-      docker exec -it --user paseo paseo_server_1 claude
-      docker exec -it --user paseo paseo_server_1 codex
+      docker exec -it --user paseo commons-paseo_server_1 claude
+      docker exec -it --user paseo commons-paseo_server_1 codex
 
   Agent credentials persist in app data. Paseo also wants the `gh` CLI
   authenticated for PR-aware worktrees and orchestration.

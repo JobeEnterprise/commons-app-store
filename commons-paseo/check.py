@@ -13,7 +13,7 @@ try:
 except ImportError:
     sys.exit("needs pyyaml: pip install pyyaml")
 
-APP_ID = "paseo"
+APP_ID = "commons-paseo"
 HERE = Path(__file__).parent
 manifest = yaml.safe_load((HERE / "umbrel-app.yml").read_text())
 compose = yaml.safe_load((HERE / "docker-compose.yml").read_text())
@@ -34,6 +34,19 @@ if manifest.get("id") != APP_ID:
     errors.append(f"manifest: id is {manifest.get('id')!r}, must equal folder name {APP_ID!r}")
 if not re.fullmatch(r"[a-z0-9]+(-[a-z0-9]+)*", str(manifest.get("id", ""))):
     errors.append("manifest: id must be lowercase kebab-case")
+
+# umbrelOS only lists a community app when its id starts with the store id from
+# umbrel-app-store.yml. A mismatch does not error - the app is silently
+# dropped and the store shows 0 apps.
+store_file = HERE.parent / "umbrel-app-store.yml"
+if store_file.exists():
+    store_id = (yaml.safe_load(store_file.read_text()) or {}).get("id", "")
+    app_id = str(manifest.get("id", ""))
+    if store_id and not (app_id == store_id or app_id.startswith(f"{store_id}-")):
+        errors.append(
+            f"manifest: id {app_id!r} does not start with store id {store_id!r} - "
+            "umbrelOS will silently hide this app and the store will show 0 apps"
+        )
 if str(manifest.get("manifestVersion")) != "1":
     errors.append("manifest: manifestVersion should be 1 unless newer framework behaviour is required")
 if manifest.get("category") not in {

@@ -4,7 +4,7 @@ services:
 
   app_proxy:
     environment:
-      APP_HOST: paseo_server_1
+      APP_HOST: commons-paseo_server_1
       APP_PORT: 6767
       # Paseo does its own password auth and serves its own login screen, so
       # Umbrel auth in front of it would double-prompt and break the WebSocket
