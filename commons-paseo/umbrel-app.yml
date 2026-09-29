@@ -1,28 +1,54 @@
-manifestVersion: 1.1
+manifestVersion: 1
 id: commons-paseo
+category: developer
 name: Paseo
+version: "0.10.1"
 tagline: The control plane for coding agents
 icon: https://raw.githubusercontent.com/getpaseo/paseo/main/packages/website/public/favicon.svg
-category: developer
-version: "0.10.1"
-port: 6767
 description: >-
-  Run any coding agent from anywhere. Self-hosted, multi-provider, open source.
+  **Your daemon password is shown by Umbrel** when you install this app. Keep it
+  somewhere safe — the API and WebSocket are unreachable without it.
 
-  Paseo runs your coding agents on your Umbrel and gives you a mobile, desktop, web, and CLI client to drive them from anywhere.
 
-  Supports Claude Code, Codex, OpenCode, Pi, and 34+ more providers.
+  Paseo runs your coding agents on your Umbrel and lets you drive them from a
+  browser, phone, or CLI. Supports Claude Code, Codex, OpenCode, Pi, and 34+
+  more providers.
+
+
+  **No agents are bundled.** Paseo manages agent CLIs, it doesn't ship one.
+  Install at least one yourself before the app is useful, then authenticate it:
+
+      docker exec -it --user paseo commons-paseo_server_1 claude
+      docker exec -it --user paseo commons-paseo_server_1 codex
+
+  Agent credentials persist in app data. Paseo also wants the `gh` CLI
+  authenticated for PR-aware worktrees and orchestration.
+
+
+  Your code lives in the `workspace` folder in this app's data directory, and
+  stays on your machine. Paseo has no telemetry and no forced login.
+releaseNotes: >-
+  First working release on Umbrel.
+
+
+  Fixes a permission failure that prevented the daemon from creating its state
+  directory, and a 403 that blocked the web UI from loading behind Umbrel's
+  proxy. The daemon password is now generated per-install and shown by Umbrel
+  instead of a shared placeholder.
+
+
+  Upstream release notes: https://github.com/getpaseo/paseo/releases/tag/v0.10.1
 
 developer: Paseo
 website: https://paseo.sh
-submitter: Paseo
-submission: https://github.com/getpaseo/paseo
+dependencies: []
 repo: https://github.com/getpaseo/paseo
 support: https://github.com/getpaseo/paseo/issues
+port: 6767
 gallery: []
-releaseNotes: >-
-  Initial release.
-dependencies: []
 path: ""
 defaultUsername: ""
-defaultPassword: "change-me"
+defaultPassword: ""
+deterministicPassword: true
+submitter: JobeEnterprise
+submission: https://github.com/JobeEnterprise/commons-app-store

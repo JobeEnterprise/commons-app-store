@@ -6,14 +6,35 @@ services:
     environment:
       APP_HOST: commons-paseo_server_1
       APP_PORT: 6767
-    
+      # Paseo does its own password auth and serves its own login screen, so
+      # Umbrel auth in front of it would double-prompt and break the WebSocket
+      # upgrade the UI depends on.
+      PROXY_AUTH_ADD: "false"
+
   server:
-    image: ghcr.io/getpaseo/paseo:latest
+    # Tag and digest pinned together, per Umbrel packaging guidance. Multi-arch
+    # index digest: covers linux/amd64 (N5105) and linux/arm64.
+    image: ghcr.io/getpaseo/paseo:0.10.1@sha256:4dad5ba8f36c8bad9caec033b72d11b3c14a4a5040c07fafe577e8b817814b3b
+    restart: on-failure
+    # Paseo spawns agent CLIs as child processes and needs real init for
+    # reaping. The Tini "not running as PID 1" warning in logs is cosmetic.
     init: true
-    restart: unless-stopped
     environment:
-      PASEO_PASSWORD: "change-me"
+      # Per-install secret from Umbrel. Paired with deterministicPassword: true
+      # so the manifest shows the user their real password.
+      PASEO_PASSWORD: ${APP_PASSWORD}
+      # The bundled web UI is served from the same origin as the API.
       PASEO_WEB_UI_ENABLED: "true"
+      # Paseo's DNS-rebinding allowlist defaults to localhost/*.localhost/IPs
+      # only, so a request via http://<device>.local:6767 is rejected with 403
+      # unless we add the device's own domain.
+      PASEO_HOSTNAMES: ${DEVICE_DOMAIN_NAME}
+      # Paseo trusts forwarded X-Forwarded-* headers from loopback only.
+      # Umbrel's app_proxy is on the app subnet, not loopback, so without this
+      # the web UI falls back to ws:// and the live agent stream never connects.
+      PASEO_TRUSTED_PROXIES: loopback,${NETWORK_IP}/16
     volumes:
-      - ${APP_DATA_DIR}/paseo-home:/home/paseo
-      - ${APP_DATA_DIR}/workspace:/workspace
+      # Daemon state, config, and agent credentials.
+      - ${APP_DATA_DIR}/data/paseo-home:/home/paseo
+      # Repositories the launched agents can read and write.
+      - ${APP_DATA_DIR}/data/workspace:/workspace
