@@ -1,0 +1,38 @@
+version: "3.7"
+
+services:
+  app_proxy:
+    environment:
+      APP_HOST: commons-hermes-agent_web_1
+      APP_PORT: 18789
+
+  # Hermes Agent gateway + dashboard + TUI, supervised by upstream s6-overlay.
+  # Uses the upstream image directly (nousresearch/hermes-agent) instead of
+  # getumbrel's wrapper, so we get v0.21.5 (v2026.9.24) rather than the
+  # wrapper's stale v0.21.3 (v2026.9.14).
+  #
+  # The upstream image has no HERMES_UMBREL_APP_PROXY_AUTH hook — the getumbrel
+  # wrapper's proxy-auth bypass is replaced here with dashboard basic auth
+  # wired to the Umbrel-injected $APP_PASSWORD. Umbrel displays the password
+  # (deterministicPassword: true in manifest) and the same credential logs you
+  # into the dashboard.
+  web:
+    image: ghcr.io/nousresearch/hermes-agent:v2026.9.24
+    restart: on-failure
+    stop_grace_period: 1m
+    volumes:
+      - ${APP_DATA_DIR}/data/hermes:/opt/data
+    environment:
+      HERMES_UID: "1000"
+      HERMES_GID: "1000"
+      HERMES_DASHBOARD: "1"
+      HERMES_DASHBOARD_PORT: "18789"
+      # Dashboard basic auth — replaces the wrapper's proxy-auth hook.
+      # $APP_PASSWORD is injected by Umbrel per-install; deterministicPassword
+      # in the manifest makes Umbrel display it to the user.
+      HERMES_DASHBOARD_BASIC_AUTH_USERNAME: "admin"
+      HERMES_DASHBOARD_BASIC_AUTH_PASSWORD: "${APP_PASSWORD}"
+      # Upstream TUI path (wrapper overrides to /app/umbrel-tui).
+      HERMES_TUI_DIR: "/opt/hermes/ui-tui"
+      HERMES_GATEWAY_BOOTSTRAP_STATE: "running"
+    command: ["gateway", "run"]
