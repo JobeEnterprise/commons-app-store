@@ -13,7 +13,7 @@ try:
 except ImportError:
     sys.exit("needs pyyaml: pip install pyyaml")
 
-APP_ID = "commons-paseo"
+APP_ID = "paseo"
 HERE = Path(__file__).parent
 manifest = yaml.safe_load((HERE / "umbrel-app.yml").read_text())
 compose = yaml.safe_load((HERE / "docker-compose.yml").read_text())
@@ -93,9 +93,11 @@ else:
 
     env = server.get("environment") or {}
     # Paseo rejects unknown Host headers, and only trusts loopback proxies.
+    # PASEO_TRUSTED_PROXIES is deliberately NOT set: it needs NETWORK_IP in a
+    # CIDR-parseable form and the daemon hard-crashes on a bare address, and on
+    # Umbrel's plain-HTTP LAN it buys nothing.
     for needed, why in [
         ("PASEO_HOSTNAMES", "otherwise the UI 403s behind Umbrel's proxy"),
-        ("PASEO_TRUSTED_PROXIES", "otherwise the UI falls back to ws:// and the stream never connects"),
     ]:
         if needed not in env:
             errors.append(f"compose: {needed} must be set — {why}")

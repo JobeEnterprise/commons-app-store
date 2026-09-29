@@ -4,7 +4,7 @@ services:
 
   app_proxy:
     environment:
-      APP_HOST: commons-paseo_server_1
+      APP_HOST: paseo_server_1
       APP_PORT: 6767
       # Paseo does its own password auth and serves its own login screen, so
       # Umbrel auth in front of it would double-prompt and break the WebSocket
@@ -29,10 +29,6 @@ services:
       # only, so a request via http://<device>.local:6767 is rejected with 403
       # unless we add the device's own domain.
       PASEO_HOSTNAMES: ${DEVICE_DOMAIN_NAME}
-      # Paseo trusts forwarded X-Forwarded-* headers from loopback only.
-      # Umbrel's app_proxy is on the app subnet, not loopback, so without this
-      # the web UI falls back to ws:// and the live agent stream never connects.
-      PASEO_TRUSTED_PROXIES: loopback,${NETWORK_IP}/16
     volumes:
       # Daemon state, config, and agent credentials.
       - ${APP_DATA_DIR}/data/paseo-home:/home/paseo
