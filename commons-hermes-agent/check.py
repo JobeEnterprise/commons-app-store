@@ -74,6 +74,25 @@ def main(root: Path) -> int:
     if manifest.get("deterministicPassword") and manifest.get("defaultPassword") != "":
         print("FAIL: deterministicPassword true but defaultPassword not empty"); return 1
 
+    # --- icon must be present (community store: nothing else supplies it) ---
+    icon = manifest.get("icon")
+    if not icon or not str(icon).strip():
+        print("FAIL: no icon set — a community store has no Umbrel team to host one"); return 1
+    if not str(icon).startswith("https://"):
+        print(f"FAIL: icon {icon!r} is not an https URL"); return 1
+
+    # --- gallery entries must be reachable URLs (not bare local filenames) ---
+    gallery = manifest.get("gallery")
+    if not isinstance(gallery, list):
+        print("FAIL: gallery is not a list"); return 1
+    for entry in gallery:
+        if not str(entry).startswith("https://"):
+            print(f"FAIL: gallery entry {entry!r} is not an https URL"); return 1
+        # reject the official store's Umbrel-hosted filenames — they are not
+        # committed locally, so the app renders with broken screenshots
+        if "/" not in str(entry):
+            print(f"FAIL: gallery entry {entry!r} looks like a local filename but is not in the repo"); return 1
+
     # --- docker-compose.yml ---
     compose_path = app_dir / "docker-compose.yml"
     if not compose_path.is_file():

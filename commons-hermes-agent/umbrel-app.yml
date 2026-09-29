@@ -4,6 +4,11 @@ category: ai
 name: Hermes Agent
 version: "2026.9.24"
 tagline: The AI agent that grows with you
+# Real upstream app icon (apps/desktop/assets/icon.png, 1024x1024) via jsDelivr,
+# pinned to the release tag so it can't drift. Committed local assets are the
+# wrong shape for a community store — the Umbrel community template uses remote
+# URLs, and the official linter warns against committing icon/gallery binaries.
+icon: https://cdn.jsdelivr.net/gh/NousResearch/hermes-agent@v2026.9.24/apps/desktop/assets/icon.png
 description: >-
   Hermes Agent is an AI agent that gets better the more you use it by creating
   its own skills, storing user preferences, and updating its memory.
@@ -30,11 +35,12 @@ dependencies: []
 repo: https://github.com/NousResearch/hermes-agent
 support: https://github.com/NousResearch/hermes-agent/issues
 port: 18790
-gallery:
-  - 1.jpg
-  - 2.jpg
-  - 3.jpg
-  - 4.jpg
+gallery: []
+# Gallery is intentionally empty. The official store's 1.jpg-4.jpg are hosted
+# by Umbrel privately and are not reusable. Upstream ships no web-dashboard
+# screenshots — the only UI images in the repo are macOS Desktop PR assets that
+# would misrepresent what an Umbrel user sees (the web dashboard at /chat).
+# Add your own dashboard screenshots here after first install.
 path: "/chat"
 defaultUsername: ""
 defaultPassword: ""
