@@ -4,6 +4,12 @@ category: ai
 name: Whisper STT
 version: "1.0.0"
 tagline: Private local speech-to-text for your apps
+# Tabler "microphone" outline icon (MIT), pinned to a gist at a fixed revision
+# so the colour cannot drift. The stock Tabler SVG uses stroke="currentColor",
+# which umbrelOS resolves unpredictably against its theme and renders
+# dark-on-dark; the stroke is baked to #f8fafc here. Remote URL rather than a
+# committed binary, per the official linter's package.review_assets warning.
+icon: https://gist.githubusercontent.com/JobeEnterprise/78f6407840a306c9dde8a01b0e7ae7da/raw/whisper-stt-icon.svg
 description: >-
   Whisper STT runs OpenAI's Whisper speech recognition entirely on your Umbrel,
   using the whisper.cpp engine. Audio is transcribed on-device — nothing is
