@@ -20,7 +20,7 @@ follows their formula.
 | Version | 2026.9.14 (stale) | **2026.9.24** |
 | Hermes code | v0.21.3 | **v0.21.5** |
 | Proxy auth | `HERMES_UMBREL_APP_PROXY_AUTH: "1"` | dashboard basic auth on `$APP_PASSWORD` |
-| Hermes Desktop app | blocked by app-proxy | blocked by app-proxy **and** WS-route basic-auth refusal |
+| Proxy auth gate | on (umbrelOS login) | **off** (`PROXY_AUTH_ADD: "false"`) so Desktop can connect |
 
 ## The auth substitution
 
@@ -41,21 +41,20 @@ With `deterministicPassword: true` and `defaultPassword: ""` in the manifest,
 Umbrel derives and displays the real password — so the credential it shows you is
 the one the dashboard accepts. Login is **admin** + that password.
 
-Cost: the dashboard has its own auth gate in front of the Umbrel proxy, so the
-browser gets a second prompt. That part is cosmetic. The part that matters is
-the **Hermes Desktop app cannot connect to this package** — see below.
+The browser therefore gets a second prompt, behind the Umbrel proxy. Unrelated to
+that, this package also disables the proxy's own login gate so the Hermes
+Desktop app can connect at all — see below.
 
-## Hermes Desktop cannot connect (known limitation)
+## Hermes Desktop and the app-proxy auth gate
 
 Verified on-device 2026-09-30 against umbrelOS 2.0 at 192.168.1.146.
 
 Symptom: adding this gateway in the Hermes Desktop app fails with
 `Could not connect to Hermes gateway (websocket error before open)`.
 
-**The primary cause is Umbrel's app-proxy, not this package.** The app's
-container port (18789) is never published; the manifest's `port: 18790` points at
-`app_proxy`, which requires an umbrelOS session cookie before it forwards
-anything:
+**Cause.** The app's container port (18789) is never published; the manifest's
+`port: 18790` points at `app_proxy`, which requires an umbrelOS session cookie
+before it forwards anything:
 
 ```
 18789  closed    ← the Hermes container, unreachable from the LAN
@@ -73,28 +72,34 @@ credential, so the proxy 401s the upgrade. A WS upgrade cannot be redirected to 
 login page, so it closes — the renderer's `error` fires before `open`
 (`apps/shared/src/json-rpc-gateway.ts:282`).
 
-The getumbrel wrapper package hits the same 401. `HERMES_UMBREL_APP_PROXY_AUTH`
-removes Hermes' *own* login behind the proxy; it does not remove the proxy's.
+**Fix applied.** `PROXY_AUTH_ADD: "false"` on the `app_proxy` service turns off
+the proxy's own gate, so the Desktop app reaches Hermes directly and Hermes'
+basic auth becomes the only wall — a password flow Desktop can satisfy.
+`check.py` fails the build if that key is removed, or if it is disabled while
+dashboard basic auth is also gone.
 
-**Secondary cause, unique to this package.** In gated mode the WS route rejects
-basic auth outright — `_ws_auth_reason` in `hermes_cli/web_server_chat.py:227-231`
-accepts only `?ticket=` or `?internal=`, and explicitly refuses the legacy
-`?token=` so a leaked session token cannot grant access. So even with the proxy
-open, Desktop would need a full password login plus ticket mint, a flow it only
-runs for OAuth providers.
+### Security consequence
 
-### Workarounds, in order of preference
+Hermes is now reachable on the LAN with no umbrelOS gate in front. The only
+remaining wall is dashboard basic auth: **admin** plus the password Umbrel
+displays for this install. Anyone on the LAN who has that password has the agent,
+its tools, and its data.
 
-1. **Use the browser dashboard** at `http://<umbrel-host>:18790/chat`. Log into
-   umbrelOS once, then Hermes asks for `admin` + the displayed password. Works
-   today, nothing to change.
-2. **Disable app-proxy auth for this app** on the device. Hermes then answers
-   directly and basic auth becomes the only wall, which Desktop's password flow
-   can satisfy. This publishes Hermes to every LAN interface protected by one
-   password — a real reduction in defence, so only worth it if the Desktop
-   connection is required.
-3. **Run the Desktop against a non-Umbrel Hermes.** A native install needs no
-   proxy and no second prompt.
+Acceptable because Umbrel's own gate adds little here — it authenticates the
+same person who already holds the app password. Worth revisiting if the LAN
+becomes shared or untrusted, in which case put the proxy gate back and use the
+browser dashboard at `http://<umbrel-host>:18790/chat` instead.
+
+### A second wall, specific to this package
+
+With the proxy open, Desktop must still authenticate to Hermes. In gated mode
+the WS route refuses basic auth outright — `_ws_auth_reason` in
+`hermes_cli/web_server_chat.py:227-231` accepts only `?ticket=` or `?internal=`,
+and explicitly refuses the legacy `?token=` so a leaked session token cannot
+grant access. Desktop handles this by running a password login and minting a
+ticket, which its `oauthGuardMayHardFail` path permits for password providers
+(`native-auth-decisions.ts:229`). **Untested on-device** — the app was installed
+and reached `ready`, but no Desktop client has completed the handshake yet.
 
 ## Image pinning
 
@@ -169,7 +174,7 @@ Package is well-formed; runtime reachability is only partly proven.
 | Digest resolves, amd64 + arm64 | verified |
 | Container boots, app reaches `ready` | verified on-device |
 | Browser dashboard login (`admin` + displayed password) | verified on-device |
-| Hermes Desktop app connects | **does not** — app-proxy, see above |
+| Hermes Desktop app connects | unverified — proxy gate now off, see above |
 
 ## Upstream references
 

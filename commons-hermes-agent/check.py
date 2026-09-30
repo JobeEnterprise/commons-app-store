@@ -117,6 +117,24 @@ def main(root: Path) -> int:
     if not app_port:
         print("FAIL: APP_PORT not set on app_proxy"); return 1
 
+    # --- app-proxy auth gate must be off, and only Hermes' own auth may remain ---
+    # The umbrelOS proxy demands a session cookie before forwarding, which the
+    # Desktop app cannot present, so its WS upgrade 401s. PROXY_AUTH_ADD=false is
+    # the documented opt-out (app-gateway.ts:95 reads it as a fail-safe: on unless
+    # the value reads "false"). A YAML boolean false is accepted too, matching the
+    # official linter, which compares authAdd.toString().toLowerCase().
+    proxy_env = services["app_proxy"]["environment"]
+    proxy_auth = proxy_env.get("PROXY_AUTH_ADD")
+    if str(proxy_auth).strip().lower() != "false":
+        print(f"FAIL: app_proxy PROXY_AUTH_ADD is {proxy_auth!r}, must be \"false\" "
+              "(the proxy's umbrelOS login gate 401s the Desktop app's WS upgrade)")
+        return 1
+    # A whitelist alongside a disabled gate is dead config, and the official
+    # linter warns about it. Catch it here too so the reason is obvious.
+    for dead in ("PROXY_AUTH_WHITELIST", "PROXY_AUTH_BLACKLIST"):
+        if dead in proxy_env:
+            print(f"FAIL: {dead} has no effect while PROXY_AUTH_ADD is false"); return 1
+
     # image must be the upstream Hermes image (direct, not getumbrel wrapper)
     image = svc.get("image", "")
     if not image:
@@ -151,6 +169,17 @@ def main(root: Path) -> int:
             return 1
         if "HERMES_DASHBOARD_BASIC_AUTH_USERNAME" not in env:
             print("FAIL: deterministicPassword set but HERMES_DASHBOARD_BASIC_AUTH_USERNAME missing")
+            return 1
+
+    # --- coupling: proxy gate off + no dashboard auth = Hermes open on the LAN ---
+    # The app_proxy gate is disabled above so the Desktop app can connect, which
+    # makes Hermes' own auth the ONLY thing between the LAN and the agent. Pair
+    # the two settings so removing one without the other fails here rather than
+    # in production.
+    if str(proxy_auth).strip().lower() == "false":
+        if not (env.get("HERMES_DASHBOARD_BASIC_AUTH_USERNAME") and env.get("HERMES_DASHBOARD_BASIC_AUTH_PASSWORD")):
+            print("FAIL: app_proxy PROXY_AUTH_ADD is false but no dashboard basic auth is "
+                  "configured — Hermes would be reachable on the LAN unauthenticated")
             return 1
     volumes = svc.get("volumes", [])
     for v in volumes:

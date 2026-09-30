@@ -5,6 +5,27 @@ services:
     environment:
       APP_HOST: commons-hermes-agent_web_1
       APP_PORT: 18789
+      # Disable the umbrelOS app-proxy's own login gate.
+      #
+      # Why: the proxy requires an umbrelOS session cookie before it forwards
+      # anything, and Hermes Desktop cannot present one — it speaks only a legacy
+      # `?token=` or an OAuth `?ticket=` minted against a Hermes login cookie.
+      # A WebSocket upgrade cannot be redirected to a login page, so the proxy
+      # answers 401 and the desktop reports
+      # "Could not connect to Hermes gateway (websocket error before open)".
+      #
+      # umbrelOS reads this key as a fail-safe: auth is on unless the value reads
+      # "false" (app-gateway.ts:95, and app.ts:1360 falls back to the same test
+      # for an app stopped since the gateway config was last rendered). Quoted
+      # here to match the official linter's accepted form; a YAML boolean false
+      # also works.
+      #
+      # SECURITY: this publishes Hermes on the LAN with no umbrelOS gate in front.
+      # The only remaining wall is the dashboard basic auth below
+      # (admin + the password Umbrel displays). Do not remove that provider
+      # without replacing it — the dashboard hard-requires an auth provider on
+      # non-loopback binds.
+      PROXY_AUTH_ADD: "false"
 
   # Hermes Agent gateway + dashboard + TUI, supervised by upstream s6-overlay.
   # Uses the upstream image directly instead of getumbrel's wrapper, so we get
