@@ -20,6 +20,7 @@ follows their formula.
 | Version | 2026.9.14 (stale) | **2026.9.24** |
 | Hermes code | v0.21.3 | **v0.21.5** |
 | Proxy auth | `HERMES_UMBREL_APP_PROXY_AUTH: "1"` | dashboard basic auth on `$APP_PASSWORD` |
+| Hermes Desktop app | blocked by app-proxy | blocked by app-proxy **and** WS-route basic-auth refusal |
 
 ## The auth substitution
 
@@ -40,8 +41,60 @@ With `deterministicPassword: true` and `defaultPassword: ""` in the manifest,
 Umbrel derives and displays the real password — so the credential it shows you is
 the one the dashboard accepts. Login is **admin** + that password.
 
-Cost: the dashboard has its own auth gate in front of the Umbrel proxy. On a LAN
-that's a second prompt, not a security problem.
+Cost: the dashboard has its own auth gate in front of the Umbrel proxy, so the
+browser gets a second prompt. That part is cosmetic. The part that matters is
+the **Hermes Desktop app cannot connect to this package** — see below.
+
+## Hermes Desktop cannot connect (known limitation)
+
+Verified on-device 2026-09-30 against umbrelOS 2.0 at 192.168.1.146.
+
+Symptom: adding this gateway in the Hermes Desktop app fails with
+`Could not connect to Hermes gateway (websocket error before open)`.
+
+**The primary cause is Umbrel's app-proxy, not this package.** The app's
+container port (18789) is never published; the manifest's `port: 18790` points at
+`app_proxy`, which requires an umbrelOS session cookie before it forwards
+anything:
+
+```
+18789  closed    ← the Hermes container, unreachable from the LAN
+18790  OPEN      ← app_proxy, what `port:` publishes
+2000   OPEN      ← umbrelOS auth
+
+GET /api/status  → 302  Location: http://<host>:2000/app-auth?app=commons-hermes-agent&…
+GET /api/ws      → 401  Unauthorized, Connection: close
+```
+
+Desktop speaks two auth protocols (`apps/desktop/electron/connection-config.ts`):
+a legacy static `?token=`, or an OAuth `?ticket=` minted at
+`POST /api/auth/ws-ticket` against a login cookie. Neither is an umbrelOS
+credential, so the proxy 401s the upgrade. A WS upgrade cannot be redirected to a
+login page, so it closes — the renderer's `error` fires before `open`
+(`apps/shared/src/json-rpc-gateway.ts:282`).
+
+The getumbrel wrapper package hits the same 401. `HERMES_UMBREL_APP_PROXY_AUTH`
+removes Hermes' *own* login behind the proxy; it does not remove the proxy's.
+
+**Secondary cause, unique to this package.** In gated mode the WS route rejects
+basic auth outright — `_ws_auth_reason` in `hermes_cli/web_server_chat.py:227-231`
+accepts only `?ticket=` or `?internal=`, and explicitly refuses the legacy
+`?token=` so a leaked session token cannot grant access. So even with the proxy
+open, Desktop would need a full password login plus ticket mint, a flow it only
+runs for OAuth providers.
+
+### Workarounds, in order of preference
+
+1. **Use the browser dashboard** at `http://<umbrel-host>:18790/chat`. Log into
+   umbrelOS once, then Hermes asks for `admin` + the displayed password. Works
+   today, nothing to change.
+2. **Disable app-proxy auth for this app** on the device. Hermes then answers
+   directly and basic auth becomes the only wall, which Desktop's password flow
+   can satisfy. This publishes Hermes to every LAN interface protected by one
+   password — a real reduction in defence, so only worth it if the Desktop
+   connection is required.
+3. **Run the Desktop against a non-Umbrel Hermes.** A native install needs no
+   proxy and no second prompt.
 
 ## Image pinning
 
@@ -105,6 +158,18 @@ dashboard basic auth, `icon` present, gallery entries as reachable URLs,
 This is a community store, so the app id **must** be `commons-hermes-agent`, not
 `hermes-agent`. A mismatch silently hides the app — the store just shows 0 apps,
 no error, no log. `check.py` enforces it.
+
+## Verification status
+
+Package is well-formed; runtime reachability is only partly proven.
+
+| Claim | State |
+|---|---|
+| Official linter clean | verified (and proven non-silent) |
+| Digest resolves, amd64 + arm64 | verified |
+| Container boots, app reaches `ready` | verified on-device |
+| Browser dashboard login (`admin` + displayed password) | verified on-device |
+| Hermes Desktop app connects | **does not** — app-proxy, see above |
 
 ## Upstream references
 
