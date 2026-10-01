@@ -1,4 +1,4 @@
-manifestVersion: 1
+manifestVersion: 1.1
 id: commons-hindsight
 category: ai
 name: Hindsight
@@ -33,27 +33,24 @@ description: >-
   as one belief with history, not two competing facts.
 
 
-  ## First run
+  ## Setup
 
 
-  umbrelOS has no key-entry form, so one file needs editing after install. Open
-  the app's data directory, fill in three values in `settings.env`, then restart
-  the app from the dashboard.
+  Open **App Settings** and fill in three fields, then restart the app. No file
+  editing is needed — umbrelOS renders every variable below as a labelled
+  input on the Environment variables tab.
 
 
-      ~/umbrel/app-data/commons-hindsight/settings.env
-
-
-  1. `HINDSIGHT_API_KEY` — a random string you invent (`openssl rand -hex 32`).
-     Hindsight ships with **no authentication**, and the API listens on all
-     interfaces inside the container. Umbrel's login gates only this app's web UI,
-     not the API. Without this key, anything that can reach the container can
-     read and write your memories.
-  2. `HINDSIGHT_CP_KEY` — a second random string you invent. This is the login
-     prompt you see when opening the app.
-  3. `HINDSIGHT_API_LLM_API_KEY` — your LLM provider key. OpenRouter is already
-     configured as the provider. Any OpenAI-compatible endpoint works —
-     Anthropic, Groq, Gemini, or a local llama.cpp or Ollama.
+  1. **API key** — any random string (`openssl rand -hex 32`). Hindsight ships
+     with **no authentication**, and its API listens on all interfaces inside
+     the container. Umbrel's login gates only this app's web UI, not the API,
+     so without this anything that can reach the container reads and writes
+     your memories.
+  2. **UI access key** — a second random string. This is the login prompt you
+     get when opening the app.
+  3. **LLM API key** — your model provider key. OpenRouter is the default and
+     already configured. Anthropic, Groq, Gemini, or a local llama.cpp or
+     Ollama work too — change the provider and its fields below apply.
 
 
   ## What stays on your device
@@ -98,3 +95,43 @@ defaultPassword: ""
 deterministicPassword: false
 submitter: JobeEnterprise
 submission: https://github.com/JobeEnterprise/commons-app-store
+# umbrelOS App Settings > Environment variables. A `default` is a UI-only
+# placeholder: the runtime value only changes when the user saves an override.
+environment:
+  - name: HINDSIGHT_API_KEY
+    services: [server]
+    default: ""
+    note: Required. Any random string - openssl rand -hex 32. Hindsight has no auth by default and its API listens on all interfaces; Umbrel's login gates only the web UI.
+  - name: HINDSIGHT_CP_KEY
+    services: [server]
+    default: ""
+    note: Required. A second random string. This is the login prompt on the web UI.
+  - name: HINDSIGHT_API_LLM_PROVIDER
+    services: [server]
+    default: openai
+    options: [openai, anthropic, gemini, groq, litellm]
+    note: LLM provider for fact extraction and synthesis. openai plus a custom base URL covers OpenRouter and any OpenAI-compatible endpoint.
+  - name: HINDSIGHT_API_LLM_BASE_URL
+    services: [server]
+    default: https://openrouter.ai/api/v1
+    note: Only used by the openai provider. Must end in /v1 for OpenAI-compatible endpoints.
+  - name: HINDSIGHT_API_LLM_MODEL
+    services: [server]
+    default: stealth/space-bunny-alpha
+    note: Any model the chosen provider serves. Used for fact extraction, entity resolution, and reflect.
+  - name: HINDSIGHT_API_LLM_API_KEY
+    services: [server]
+    default: ""
+    note: Required. Key for the provider selected above.
+  - name: HINDSIGHT_API_LINK_EXPANSION_PER_ENTITY_LIMIT
+    services: [server]
+    default: "400"
+    note: Graph traversal fanout per entity. Higher is more thorough and slower. Upstream default is 200.
+  - name: HINDSIGHT_API_LLM_MAX_CONCURRENT
+    services: [server]
+    default: "8"
+    note: Parallel LLM calls. Lower this if the provider rate-limits you. Upstream default is 32.
+  - name: HINDSIGHT_API_STARTUP_WAIT_SECONDS
+    services: [server]
+    default: "600"
+    note: How long the container waits for a healthy API before restarting. First boot downloads models from HuggingFace.
