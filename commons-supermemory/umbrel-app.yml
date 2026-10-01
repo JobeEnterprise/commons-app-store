@@ -4,7 +4,10 @@ category: ai
 name: Supermemory
 version: "0.0.8"
 tagline: Self-hosted memory and document search for AI agents
-icon: https://raw.githubusercontent.com/supermemoryai/supermemory/main/.github/assets/logo.svg
+# Real upstream mark (apps/docs/logo/light.svg), via jsDelivr pinned to the
+# release tag so it cannot drift. The previous .github/assets/logo.svg was a
+# 404 — no such path exists in the upstream repo.
+icon: https://cdn.jsdelivr.net/gh/supermemoryai/supermemory@server-v0.0.8/apps/docs/logo/light.svg
 description: >-
   **Add your API key after installing, or the app will not start.** See
   "First run" below.
