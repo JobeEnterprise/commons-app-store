@@ -1,0 +1,137 @@
+manifestVersion: 1.1
+id: commons-hindsight
+category: ai
+name: Hindsight
+version: "0.6.2"
+tagline: Long-term memory that learns, with a web UI
+# Upstream control-plane logo, via jsDelivr pinned to the v0.6.2 release so it
+# cannot drift.
+icon: https://cdn.jsdelivr.net/gh/vectorize-io/hindsight@0.6.2/hindsight-control-plane/public/logo.png
+description: >-
+  **Three values must be set after installing, or the app will not work
+  correctly.** See "First run" below.
+
+
+  Hindsight is memory infrastructure for AI agents. Your agent stores
+  information, searches it, and reasons over it — so it stops starting every
+  conversation from zero.
+
+
+  ## What it does
+
+
+  Search is not a single lookup. Four strategies run in parallel and their
+  results merge: **semantic** (concepts and paraphrases), **keyword** (exact
+  terms, error strings, names), **graph** (related entities and indirect
+  connections), and **temporal** ("last spring", "in June"). That last one is
+  what makes "what did we decide about pricing?" answerable months later.
+
+
+  Facts are also **consolidated** into observations: deduplicated beliefs that
+  cite the exact quotes supporting them, updated rather than overwritten when
+  new evidence arrives. "User was a React fan but has switched to Vue" survives
+  as one belief with history, not two competing facts.
+
+
+  ## Setup
+
+
+  Open **App Settings** and fill in three fields, then restart the app. No file
+  editing is needed — umbrelOS renders every variable below as a labelled
+  input on the Environment variables tab.
+
+
+  1. **API key** — any random string (`openssl rand -hex 32`). Hindsight ships
+     with **no authentication**, and its API listens on all interfaces inside
+     the container. Umbrel's login gates only this app's web UI, not the API,
+     so without this anything that can reach the container reads and writes
+     your memories.
+  2. **UI access key** — a second random string. This is the login prompt you
+     get when opening the app.
+  3. **LLM API key** — your model provider key. OpenRouter is the default and
+     already configured. Anthropic, Groq, Gemini, or a local llama.cpp or
+     Ollama work too — change the provider and its fields below apply.
+
+
+  ## What stays on your device
+
+
+  The embedder, the reranker, and the database all run inside this container, so
+  your memories are never sent to an external embedding service. The **only**
+  calls that leave the device are the LLM calls used to extract facts from what
+  you store — and those carry that content to whichever provider you configure.
+
+
+  This is the `full` image, which is why it is larger. The `slim` variant would
+  send your memory text to an external embedding provider instead.
+
+
+  ## Data
+
+
+  Everything lives in `data/pg0` in this app's data directory — an embedded
+  PostgreSQL with the vector extension. Back up that directory to move or
+  restore your banks.
+
+
+  ## Connect an agent
+
+
+  Hindsight exposes an MCP server inside this container, so any MCP-capable
+  client can use it alongside the web UI. The Hermes integration is also
+  available as a native memory provider.
+releaseNotes: ""
+
+developer: Vectorize
+website: https://hindsight.vectorize.io
+dependencies: []
+repo: https://github.com/vectorize-io/hindsight
+support: https://github.com/vectorize-io/hindsight/issues
+port: 18793
+gallery: []
+path: ""
+defaultUsername: ""
+defaultPassword: ""
+deterministicPassword: false
+submitter: JobeEnterprise
+submission: https://github.com/JobeEnterprise/commons-app-store
+# umbrelOS App Settings > Environment variables. A `default` is a UI-only
+# placeholder: the runtime value only changes when the user saves an override.
+environment:
+  - name: HINDSIGHT_API_KEY
+    services: [server]
+    default: ""
+    note: Required. Any random string - openssl rand -hex 32. Hindsight has no auth by default and its API listens on all interfaces; Umbrel's login gates only the web UI.
+  - name: HINDSIGHT_CP_KEY
+    services: [server]
+    default: ""
+    note: Required. A second random string. This is the login prompt on the web UI.
+  - name: HINDSIGHT_API_LLM_PROVIDER
+    services: [server]
+    default: openai
+    options: [openai, anthropic, gemini, groq, litellm]
+    note: LLM provider for fact extraction and synthesis. openai plus a custom base URL covers OpenRouter and any OpenAI-compatible endpoint.
+  - name: HINDSIGHT_API_LLM_BASE_URL
+    services: [server]
+    default: https://openrouter.ai/api/v1
+    note: Only used by the openai provider. Must end in /v1 for OpenAI-compatible endpoints.
+  - name: HINDSIGHT_API_LLM_MODEL
+    services: [server]
+    default: stealth/space-bunny-alpha
+    note: Any model the chosen provider serves. Used for fact extraction, entity resolution, and reflect.
+  - name: HINDSIGHT_API_LLM_API_KEY
+    services: [server]
+    default: ""
+    note: Required. Key for the provider selected above.
+  - name: HINDSIGHT_API_LINK_EXPANSION_PER_ENTITY_LIMIT
+    services: [server]
+    default: "400"
+    note: Graph traversal fanout per entity. Higher is more thorough and slower. Upstream default is 200.
+  - name: HINDSIGHT_API_LLM_MAX_CONCURRENT
+    services: [server]
+    default: "8"
+    note: Parallel LLM calls. Lower this if the provider rate-limits you. Upstream default is 32.
+  - name: HINDSIGHT_API_STARTUP_WAIT_SECONDS
+    services: [server]
+    default: "600"
+    note: How long the container waits for a healthy API before restarting. First boot downloads models from HuggingFace.

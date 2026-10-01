@@ -1,0 +1,88 @@
+version: "3.7"
+
+services:
+
+  # Hindsight ships a real web UI (the Control Plane on 9999), so app_proxy is
+  # what gives you the dashboard tile. Umbrel injects session auth by default;
+  # do NOT set PROXY_AUTH_ADD: "false". Note that Umbrel's gate covers ONLY this
+  # proxy — it does not protect the API on 8888, which is why API key auth is
+  # enabled below.
+  app_proxy:
+    environment:
+      APP_HOST: commons-hindsight_server_1
+      APP_PORT: 9999
+
+  server:
+    # Official upstream image, tag and multi-arch index digest both pinned.
+    # Digest covers linux/amd64 and linux/arm64. The `full` bundle is required
+    # (not `slim`): it carries the BGE embedder and MiniLM reranker so semantic
+    # search and ranking run locally and no memory text is sent to an external
+    # embedding provider.
+    image: ghcr.io/vectorize-io/hindsight:0.6.2@sha256:f0f9e9a73d6aedde9eaf4010ab604c3e015494e494318b26f1011144856b8112
+    restart: on-failure
+    # The embedded PostgreSQL (pg0) and the local ML models both take real time
+    # to come up. Without a generous start period the healthcheck fails while
+    # the container is still booting fine and on-failure restarts it forever.
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://127.0.0.1:8888/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 420s
+    environment:
+      # --- API auth (Hindsight ships with auth OFF) ---
+      # The API listens on 0.0.0.0:8888 inside the container. Umbrel's proxy
+      # gates only the web UI, so without this any container on the Umbrel
+      # network could read and write every memory. Values come from App Settings.
+      HINDSIGHT_API_TENANT_EXTENSION: "hindsight_api.extensions.builtin.tenant:ApiKeyTenantExtension"
+      HINDSIGHT_API_TENANT_API_KEY: ${HINDSIGHT_API_KEY}
+
+      # --- Control Plane (web UI) ---
+      # Login gate for the UI itself, independent of the API key.
+      HINDSIGHT_CP_ACCESS_KEY: ${HINDSIGHT_CP_KEY}
+      # Required once the API is auth-protected, or every UI call 401s.
+      HINDSIGHT_CP_DATAPLANE_API_URL: "http://localhost:8888"
+      HINDSIGHT_CP_DATAPLANE_API_KEY: ${HINDSIGHT_API_KEY}
+
+      # --- LLM (App Settings) ---
+      # Fact extraction, entity resolution, and reflect. Only these calls leave
+      # the device; memories are stored and embedded locally. OpenRouter is
+      # OpenAI-compatible, so provider "openai" + BASE_URL is the combination.
+      HINDSIGHT_API_LLM_PROVIDER: ${HINDSIGHT_API_LLM_PROVIDER}
+      HINDSIGHT_API_LLM_BASE_URL: ${HINDSIGHT_API_LLM_BASE_URL}
+      HINDSIGHT_API_LLM_MODEL: ${HINDSIGHT_API_LLM_MODEL}
+      HINDSIGHT_API_LLM_API_KEY: ${HINDSIGHT_API_LLM_API_KEY}
+
+      # --- Retrieval (App Settings) ---
+      # link_expansion is the only algorithm; fanout raised from the 200 default
+      # for deeper, slower traversal.
+      HINDSIGHT_API_LINK_EXPANSION_PER_ENTITY_LIMIT: ${HINDSIGHT_API_LINK_EXPANSION_PER_ENTITY_LIMIT}
+
+      # --- Concurrency (App Settings) ---
+      # Upstream default is 32, tuned for cloud providers. Lowered because a
+      # shared or rate-limited endpoint gets starved otherwise.
+      HINDSIGHT_API_LLM_MAX_CONCURRENT: ${HINDSIGHT_API_LLM_MAX_CONCURRENT}
+
+      # --- Startup (App Settings) ---
+      # First boot downloads the embedder and reranker from HuggingFace. The
+      # image's built-in wait is 300s; raise it so a slow first model download
+      # is not cut short.
+      HINDSIGHT_API_STARTUP_WAIT_SECONDS: ${HINDSIGHT_API_STARTUP_WAIT_SECONDS}
+
+      # --- Fixed, not surfaced ---
+      # Embedded PostgreSQL. Nothing to provision.
+      HINDSIGHT_API_DATABASE_URL: "pg0"
+      # Traced rows hold the full prompt and model output, which can include
+      # memory content. Upstream defaults this on with 1-day retention.
+      HINDSIGHT_API_LLM_TRACE_ENABLED: "false"
+    volumes:
+      # Embedded PostgreSQL data directory — all banks, memories, and vectors.
+      - ${APP_DATA_DIR}/data/pg0:/home/hindsight/.pg0
+    # Upstream: 1.5 GB minimum for the full API image, 2 GB recommended. The
+    # bundle loads a ~130 MB embedder and ~90 MB reranker plus PyTorch and ONNX
+    # arenas, and RSS runs 1.2-1.5 GB under load. 4 GB leaves headroom for a
+    # large ingest or a reflect call without the OOM killer intervening.
+    # /dev/shm must be large enough for Postgres, or the embedded database
+    # refuses to start.
+    shm_size: 1g
+    mem_limit: 4g
