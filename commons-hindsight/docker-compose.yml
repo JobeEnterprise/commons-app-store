@@ -1,0 +1,54 @@
+version: "3.7"
+
+services:
+
+  # Hindsight ships a real web UI, so app_proxy is what gives you the dashboard
+  # tile — port 9999 is the control plane. Umbrel injects its session auth by
+  # default; do NOT set PROXY_AUTH_ADD: "false" or the memory UI goes public.
+  app_proxy:
+    environment:
+      APP_HOST: commons-hindsight_server_1
+      APP_PORT: 9999
+
+  server:
+    # Official upstream image, tag and multi-arch index digest both pinned.
+    # Digest covers linux/amd64 and linux/arm64. The `full` bundle is required
+    # (not `slim`): it carries the BGE embedder and MiniLM reranker so semantic
+    # search and ranking run locally and no memory text is sent to an external
+    # embedding provider.
+    image: ghcr.io/vectorize-io/hindsight:0.6.2@sha256:f0f9e9a73d6aedde9eaf4010ab604c3e015494e494318b26f1011144856b8112
+    restart: on-failure
+    # The embedded PostgreSQL (pg0) and the local ML models both take real time
+    # to come up. Without a generous start period the healthcheck fails while
+    # the container is still booting fine and on-failure restarts it forever.
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://127.0.0.1:8888/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 300s
+    env_file:
+      # Committed with placeholders (see settings.env). umbrelOS has no key-entry
+      # form, so the user edits this file after install.
+      - ${APP_DATA_DIR}/settings.env
+    environment:
+      # LLM provider for fact extraction, entity resolution, and reflect.
+      # Only these calls leave the device — memories are stored and embedded
+      # locally. OpenRouter is OpenAI-compatible, so provider "openai" plus
+      # BASE_URL is the combination to use.
+      HINDSIGHT_API_LLM_PROVIDER: "openai"
+      HINDSIGHT_API_LLM_BASE_URL: "https://openrouter.ai/api/v1"
+      HINDSIGHT_API_LLM_MODEL: "stealth/space-bunny-alpha"
+      # Defaults to pg0, embedded PostgreSQL. Nothing to provision.
+      HINDSIGHT_API_DATABASE_URL: "pg0"
+      # Traced rows hold the full prompt and model output, which can include
+      # memory content. Off by default here rather than left on for a day.
+      HINDSIGHT_API_LLM_TRACE_ENABLED: "false"
+    volumes:
+      # Embedded PostgreSQL data directory — all banks, memories, and vectors.
+      - ${APP_DATA_DIR}/data/pg0:/home/hindsight/.pg0
+    # The full bundle loads a ~130 MB embedder and ~90 MB reranker plus PyTorch
+    # and ONNX arenas: upstream recommends 2 GB. /dev/shm must be large enough for
+    # Postgres, or the embedded database refuses to start.
+    shm_size: 1g
+    mem_limit: 3g

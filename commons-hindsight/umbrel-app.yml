@@ -1,0 +1,84 @@
+manifestVersion: 1
+id: commons-hindsight
+category: ai
+name: Hindsight
+version: "0.6.2"
+tagline: Long-term memory that learns, with a web UI
+# Upstream control-plane logo, via jsDelivr pinned to the v0.6.2 release so it
+# cannot drift.
+icon: https://cdn.jsdelivr.net/gh/vectorize-io/hindsight@0.6.2/hindsight-control-plane/public/logo.png
+description: >-
+  **Add your API key after installing, or the app will not start.** See
+  "First run" below.
+
+
+  Hindsight is memory infrastructure for AI agents. Your agent stores
+  information, searches it, and reasons over it — so it stops starting every
+  conversation from zero.
+
+
+  ## What it does
+
+
+  Search is not a single lookup. Four strategies run in parallel and their
+  results merge: **semantic** (concepts and paraphrases), **keyword** (exact
+  terms, error strings, names), **graph** (related entities and indirect
+  connections), and **temporal** ("last spring", "in June"). That last one is
+  what makes "what did we decide about pricing?" answerable months later.
+
+
+  Facts are also **consolidated** into observations: deduplicated beliefs that
+  cite the exact quotes supporting them, updated rather than overwritten when
+  new evidence arrives. "User was a React fan but has switched to Vue" survives
+  as one belief with history, not two competing facts.
+
+
+  ## First run
+
+
+  umbrelOS has no key-entry form, so one file needs editing after install. Open
+  the app's data directory and put your LLM provider key in
+  `settings.env`, then restart the app from the dashboard.
+
+
+      ~/umbrel/app-data/commons-hindsight/settings.env
+
+
+  OpenRouter is already configured as the provider. Any OpenAI-compatible
+  endpoint works — Anthropic, Groq, Gemini, or a local llama.cpp or Ollama.
+
+
+  ## What stays on your device
+
+
+  The embedder, the reranker, and the database all run inside this container, so
+  your memories are never sent to an external embedding service. The **only**
+  calls that leave the device are the LLM calls used to extract facts from what
+  you store — and those carry that content to whichever provider you configure.
+
+
+  This is the `full` image, which is why it is larger. The `slim` variant would
+  send your memory text to an external embedding provider instead.
+
+
+  ## Data
+
+
+  Everything lives in `data/pg0` in this app's data directory — an embedded
+  PostgreSQL with the vector extension. Back up that directory to move or
+  restore your banks.
+releaseNotes: ""
+
+developer: Vectorize
+website: https://hindsight.vectorize.io
+dependencies: []
+repo: https://github.com/vectorize-io/hindsight
+support: https://github.com/vectorize-io/hindsight/issues
+port: 18793
+gallery: []
+path: ""
+defaultUsername: ""
+defaultPassword: ""
+deterministicPassword: false
+submitter: JobeEnterprise
+submission: https://github.com/JobeEnterprise/commons-app-store
