@@ -47,12 +47,12 @@ description: >-
      with **no authentication**, and its API listens on all interfaces inside
      the container. Umbrel's login gates only this app's web UI, not the API,
      so without this anything that can reach the container reads and writes
-     your memories.
+     your memories. Paste the **same value** into the dataplane field below.
   2. **UI access key** — a second random string. This is the login prompt you
      get when opening the app.
   3. **LLM API key** — your model provider key. OpenRouter is the default and
-     already configured. Anthropic, Groq, Gemini, or a local llama.cpp or
-     Ollama work too — change the provider and its fields below apply.
+     already configured. Anthropic, Groq, and Gemini work too — change the
+     provider dropdown and its base URL stops being used.
 
 
   ## What stays on your device
@@ -100,18 +100,27 @@ submission: https://github.com/JobeEnterprise/commons-app-store
 # umbrelOS App Settings > Environment variables. A `default` is a UI-only
 # placeholder: the runtime value only changes when the user saves an override.
 environment:
-  - name: HINDSIGHT_API_KEY
+  # Names here MUST match the keys in docker-compose.yml's server.environment.
+  # umbrelOS writes user values into a separate override compose file and
+  # replaces the base entry for the same key; a name declared here that does not
+  # exist in compose is silently dropped, and a compose key not declared here
+  # can never be set by the user.
+  - name: HINDSIGHT_API_TENANT_API_KEY
     services: [server]
     default: ""
-    note: Required. Any random string - openssl rand -hex 32. Hindsight has no auth by default and its API listens on all interfaces; Umbrel's login gates only the web UI.
-  - name: HINDSIGHT_CP_KEY
+    note: Required. Any random string - openssl rand -hex 32. Hindsight has no auth by default and its API listens on all interfaces; Umbrel's login gates only the web UI. Paste the SAME value into HINDSIGHT_CP_DATAPLANE_API_KEY below.
+  - name: HINDSIGHT_CP_ACCESS_KEY
     services: [server]
     default: ""
     note: Required. A second random string. This is the login prompt on the web UI.
+  - name: HINDSIGHT_CP_DATAPLANE_API_KEY
+    services: [server]
+    default: ""
+    note: Required. Same value as HINDSIGHT_API_TENANT_API_KEY. Without it every web UI call returns 401.
   - name: HINDSIGHT_API_LLM_PROVIDER
     services: [server]
     default: openai
-    options: [openai, anthropic, gemini, groq, litellm]
+    options: [openai, anthropic, gemini, groq]
     note: LLM provider for fact extraction and synthesis. openai plus a custom base URL covers OpenRouter and any OpenAI-compatible endpoint.
   - name: HINDSIGHT_API_LLM_BASE_URL
     services: [server]
