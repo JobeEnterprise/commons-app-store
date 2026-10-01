@@ -4,12 +4,14 @@ category: ai
 name: Hindsight
 version: "0.6.2"
 tagline: Long-term memory that learns, with a web UI
-# Upstream control-plane logo, via jsDelivr pinned to the v0.6.2 release so it
-# cannot drift.
-icon: https://cdn.jsdelivr.net/gh/vectorize-io/hindsight@0.6.2/hindsight-control-plane/public/logo.png
+# Square mark only. The `logo.png` next to it is a 529x139 wordmark with the
+# word "Hindsight" in it, which renders as an unreadable sliver in a square
+# app-store tile. This is the same artwork without the text, and is byte-
+# identical to the repo-root hindsight-favicon.png.
+icon: https://cdn.jsdelivr.net/gh/vectorize-io/hindsight@0.6.2/hindsight-favicon.png
 description: >-
   **Three values must be set after installing, or the app will not work
-  correctly.** See "First run" below.
+  correctly.** See "Setup" below.
 
 
   Hindsight is memory infrastructure for AI agents. Your agent stores
