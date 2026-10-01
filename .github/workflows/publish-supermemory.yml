@@ -13,8 +13,10 @@ on:
       - ".github/workflows/publish-supermemory.yml"
   workflow_dispatch:
 
+# NOTE: literal lowercase owner. ${{ github.repository_owner }} expands to
+# "JobeEnterprise", and GHCR rejects any repository name containing uppercase.
 env:
-  IMAGE: ghcr.io/${{ github.repository_owner }}/supermemory-local
+  IMAGE: ghcr.io/jobeenterprise/supermemory-local
   SUPERMEMORY_VERSION: "0.0.8"
 
 jobs:
