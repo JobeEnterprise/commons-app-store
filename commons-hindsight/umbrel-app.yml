@@ -8,8 +8,8 @@ tagline: Long-term memory that learns, with a web UI
 # cannot drift.
 icon: https://cdn.jsdelivr.net/gh/vectorize-io/hindsight@0.6.2/hindsight-control-plane/public/logo.png
 description: >-
-  **Add your API key after installing, or the app will not start.** See
-  "First run" below.
+  **Three values must be set after installing, or the app will not work
+  correctly.** See "First run" below.
 
 
   Hindsight is memory infrastructure for AI agents. Your agent stores
@@ -37,15 +37,23 @@ description: >-
 
 
   umbrelOS has no key-entry form, so one file needs editing after install. Open
-  the app's data directory and put your LLM provider key in
-  `settings.env`, then restart the app from the dashboard.
+  the app's data directory, fill in three values in `settings.env`, then restart
+  the app from the dashboard.
 
 
       ~/umbrel/app-data/commons-hindsight/settings.env
 
 
-  OpenRouter is already configured as the provider. Any OpenAI-compatible
-  endpoint works — Anthropic, Groq, Gemini, or a local llama.cpp or Ollama.
+  1. `HINDSIGHT_API_KEY` — a random string you invent (`openssl rand -hex 32`).
+     Hindsight ships with **no authentication**, and the API listens on all
+     interfaces inside the container. Umbrel's login gates only this app's web UI,
+     not the API. Without this key, anything that can reach the container can
+     read and write your memories.
+  2. `HINDSIGHT_CP_KEY` — a second random string you invent. This is the login
+     prompt you see when opening the app.
+  3. `HINDSIGHT_API_LLM_API_KEY` — your LLM provider key. OpenRouter is already
+     configured as the provider. Any OpenAI-compatible endpoint works —
+     Anthropic, Groq, Gemini, or a local llama.cpp or Ollama.
 
 
   ## What stays on your device
@@ -67,6 +75,14 @@ description: >-
   Everything lives in `data/pg0` in this app's data directory — an embedded
   PostgreSQL with the vector extension. Back up that directory to move or
   restore your banks.
+
+
+  ## Connect an agent
+
+
+  Hindsight exposes an MCP server inside this container, so any MCP-capable
+  client can use it alongside the web UI. The Hermes integration is also
+  available as a native memory provider.
 releaseNotes: ""
 
 developer: Vectorize
