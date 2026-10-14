@@ -1,14 +1,15 @@
 # commons-hermes-agent
 
 Hermes Agent in the Commons community app store, packaged from the official
-`getumbrel/umbrel-apps/hermes-agent` formula and updated to **v2026.9.24**
-(upstream v0.21.5).
+`getumbrel/umbrel-apps/hermes-agent` formula and updated to **v0.22.0**
+(upstream v0.22.0).
 
 ## Why not just copy getumbrel's template
 
-Because it would be stale. getumbrel's official app is still on `2026.9.14`
-(last updated 2026-09-17); upstream released v2026.9.24 on 2026-09-24. Copying
-their template verbatim gets the old version, which defeats the point.
+Because it would be stale. getumbrel's official app ships their own wrapper
+image (`ghcr.io/getumbrel/hermes-agent-umbrel`) that lags upstream — it was on
+`2026.9.24` (v0.21.5) while upstream has since released v0.22.0. Copying
+their template verbatim gets the older build, which defeats the point.
 
 So this package uses the **upstream image directly** instead of getumbrel's
 wrapper. Everything else — manifest shape, hooks, data layout, port, `path` —
@@ -17,8 +18,8 @@ follows their formula.
 | | getumbrel wrapper | this package |
 |---|---|---|
 | Image | `ghcr.io/getumbrel/hermes-agent-umbrel` | `nousresearch/hermes-agent` (Docker Hub) |
-| Version | 2026.9.14 (stale) | **2026.9.24** |
-| Hermes code | v0.21.3 | **v0.21.5** |
+| Version | 2026.9.24 (their wrapper) | **0.22.0** |
+| Hermes code | v0.21.5 (their wrapper) | **v0.22.0** |
 | Proxy auth | `HERMES_UMBREL_APP_PROXY_AUTH: "1"` | dashboard basic auth on `$APP_PASSWORD` |
 | Proxy auth gate | on (umbrelOS login) | **off** (`PROXY_AUTH_ADD: "false"`) so Desktop can connect |
 
@@ -104,7 +105,7 @@ and reached `ready`, but no Desktop client has completed the handshake yet.
 ## Image pinning
 
 ```
-nousresearch/hermes-agent:v2026.9.24@sha256:fca358f12efd65bfaaca05884166f15c0e2788375ca30d77061ac1ebc96452b7
+nousresearch/hermes-agent:v0.22.0@sha256:c69536a39e885b8943329bda68cdf44492458b96aa74a212239bde9d2aeb406a
 ```
 
 The digest is the **multi-arch index** digest, covering both `linux/amd64` and
@@ -112,11 +113,11 @@ The digest is the **multi-arch index** digest, covering both `linux/amd64` and
 digest together; the linter requires both.
 
 > The image is on **Docker Hub**, not ghcr.io. The upstream release notes list it
-> as `nousresearch/hermes-agent:v2026.9.24` with no registry prefix, and a
+> as `nousresearch/hermes-agent:v0.22.0` with no registry prefix, and a
 > `ghcr.io/...` path returns 403 on pull. To re-verify the digest:
 >
 > ```sh
-> docker buildx imagetools inspect nousresearch/hermes-agent:v2026.9.24
+> docker buildx imagetools inspect nousresearch/hermes-agent:v0.22.0
 > ```
 
 ## Icon and gallery

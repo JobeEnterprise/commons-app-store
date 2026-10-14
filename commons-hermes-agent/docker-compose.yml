@@ -29,11 +29,12 @@ services:
 
   # Hermes Agent gateway + dashboard + TUI, supervised by upstream s6-overlay.
   # Uses the upstream image directly instead of getumbrel's wrapper, so we get
-  # v0.21.5 (v2026.9.24) rather than the wrapper's stale v0.21.3 (v2026.9.14) —
-  # getumbrel has not updated since 2026-09-17.
+  # v0.22.0 rather than the wrapper's older build. Ours is the
+  # upstream SemVer tag, digest-pinned to the multi-arch index so one pin
+  # serves both linux/amd64 and linux/arm64.
   #
   # NOTE: the image lives on Docker Hub, NOT ghcr.io. The release notes list it
-  # as `nousresearch/hermes-agent:v2026.9.24` with no registry prefix, and a
+  # as `nousresearch/hermes-agent:v0.22.0` with no registry prefix, and a
   # ghcr.io/... path 403s on pull.
   #
   # Digest is the multi-arch index digest (covers both linux/amd64 and
@@ -45,7 +46,7 @@ services:
   # (deterministicPassword: true in manifest) and the same credential logs you
   # into the dashboard.
   web:
-    image: nousresearch/hermes-agent:v2026.9.24@sha256:fca358f12efd65bfaaca05884166f15c0e2788375ca30d77061ac1ebc96452b7
+    image: nousresearch/hermes-agent:v0.22.0@sha256:c69536a39e885b8943329bda68cdf44492458b96aa74a212239bde9d2aeb406a
     restart: on-failure
     stop_grace_period: 1m
     volumes:

@@ -2,13 +2,13 @@ manifestVersion: 1
 id: commons-hermes-agent
 category: ai
 name: Hermes Agent
-version: "2026.9.24"
+version: "0.22.0"
 tagline: The AI agent that grows with you
 # Real upstream app icon (apps/desktop/assets/icon.png, 1024x1024) via jsDelivr,
 # pinned to the release tag so it can't drift. Committed local assets are the
 # wrong shape for a community store — the Umbrel community template uses remote
 # URLs, and the official linter warns against committing icon/gallery binaries.
-icon: https://cdn.jsdelivr.net/gh/NousResearch/hermes-agent@v2026.9.24/apps/desktop/assets/icon.png
+icon: https://cdn.jsdelivr.net/gh/NousResearch/hermes-agent@v0.22.0/apps/desktop/assets/icon.png
 description: >-
   Hermes Agent is an AI agent that gets better the more you use it by creating
   its own skills, storing user preferences, and updating its memory.
@@ -46,24 +46,22 @@ defaultUsername: ""
 defaultPassword: ""
 deterministicPassword: true
 releaseNotes: >-
-  Hermes Agent v0.21.5 (v2026.9.24) — patch release rolling up ~460 PRs since
-  v0.21.4 into a stable tagged release. Full curated notes deferred to v0.22.0.
-
-  Highlights in this window: a Desktop plugin SDK wave, Simple/Advanced interface
-  mode, the Connectors page replacing the MCP tab, onboarding that offers catalog
-  plugins, French/German/Spanish Desktop catalogs, RTL/LTR text direction,
-  custom model entry from the composer, per-profile stop/start/restart, kanban
-  design pass, webhook delivery mirroring, Bot Screen on hosted images, GPT-6
-  Sol/Terra/Luna and Claude Opus 5.5 in the catalogs, an official Blender Lab
-  integration, and extensive hot-path performance work. Nothing in this window
-  is skipped.
+  Hermes Agent v0.22.0 — "The Threshold Release." The largest window Hermes
+  has shipped (~24,200 commits since v0.21.0, rolling up v0.21.1–v0.21.7).
+  Tested SemVer stable releases that installs follow by default, signed
+  desktop packages, one unified package manager, a 600-plugin catalog, the
+  Claude 5.5 / GPT-6 model wave, one-click local models via llama.cpp,
+  Connectors (act in Linear/Notion through the Nous tool gateway), Bot Screen
+  (watch your bot's Linux desktop, take over at a login), password-manager
+  browser sign-in, live subagent steering, and a codebase a third smaller
+  with rare tools loading on demand.
 
   This Umbrel package uses the upstream image directly (Docker Hub
   nousresearch/hermes-agent) rather than getumbrel's wrapper, so it ships the
-  latest code rather than the wrapper's stale v0.21.3. The wrapper's
+  latest code rather than the wrapper's older build. The wrapper's
   HERMES_UMBREL_APP_PROXY_AUTH hook is replaced with dashboard basic auth
   (username: admin, password: the Umbrel-displayed app password).
 
-  Full release notes: https://github.com/NousResearch/hermes-agent/releases/tag/v2026.9.24
+  Full release notes: https://github.com/NousResearch/hermes-agent/releases/tag/v0.22.0
 submitter: JobeEnterprise
 submission: https://github.com/JobeEnterprise/commons-app-store
