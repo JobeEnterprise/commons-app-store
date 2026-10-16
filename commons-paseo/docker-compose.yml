@@ -14,7 +14,7 @@ services:
   server:
     # Tag and digest pinned together, per Umbrel packaging guidance. Multi-arch
     # index digest: covers linux/amd64 and linux/arm64.
-    image: ghcr.io/getpaseo/paseo:0.11.4@sha256:0e64b56fa1f99808623f4de70321cdd292e85b6db151636c13b0e6786b0e1ba5
+    image: ghcr.io/jobeenterprise/commons-paseo:0.11.4@sha256:23f124539f8ed443a545b12cde20e92b339e3c4bf04d23ea8b4c01d1061317a8
     restart: on-failure
     # Paseo spawns agent CLIs as child processes and needs real init for
     # reaping. The Tini "not running as PID 1" warning in logs is cosmetic.
