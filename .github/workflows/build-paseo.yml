@@ -1,0 +1,79 @@
+name: Build Paseo Image
+
+on:
+  push:
+    branches: [master]
+    paths:
+      - "commons-paseo/Dockerfile"
+      - "commons-paseo/docker-compose.yml"
+      - ".github/workflows/build-paseo.yml"
+  workflow_dispatch:
+
+env:
+  IMAGE: ghcr.io/jobeenterprise/commons-paseo
+  PASEO_VERSION: "0.10.1"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build and push (amd64 + arm64)
+        uses: docker/build-push-action@v6
+        with:
+          context: commons-paseo
+          platforms: linux/amd64,linux/arm64
+          push: true
+          provenance: false
+          tags: |
+            ${{ env.IMAGE }}:${{ env.PASEO_VERSION }}
+            ${{ env.IMAGE }}:latest
+
+      - name: Resolve the multi-arch index digest
+        id: digest
+        run: |
+          set -euo pipefail
+          DIGEST=$(docker buildx imagetools inspect \
+            "${IMAGE}:${PASEO_VERSION}" --format '{{.Manifest.Digest}}')
+          echo "digest=$DIGEST" >> "$GITHUB_OUTPUT"
+          {
+            echo "### Commons Paseo image published"
+            echo
+            echo '```'
+            echo "repo:  ${{ env.IMAGE }}"
+            echo "tag:   ${PASEO_VERSION}"
+            echo "digest: ${DIGEST}"
+            echo '```'
+            echo
+            echo "Paste the digest into commons-paseo/docker-compose.yml"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Verify both architectures are present
+        run: |
+          set -euo pipefail
+          for arch in linux/amd64 linux/arm64; do
+            if docker buildx imagetools inspect "${IMAGE}:${PASEO_VERSION}" \
+               --format '{{json .Manifest}}' | grep -q "$arch"; then
+              echo "ok: $arch present"
+            else
+              echo "MISSING: $arch" >&2
+              exit 1
+            fi
+          done

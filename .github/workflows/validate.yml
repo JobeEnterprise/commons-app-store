@@ -1,0 +1,53 @@
+name: Validate App Store
+
+on:
+  pull_request:
+    paths:
+      - "commons-*/**"
+      - "umbrel-app-store.yml"
+      - ".github/workflows/validate.yml"
+  push:
+    branches: [master]
+    paths:
+      - "commons-*/**"
+      - "umbrel-app-store.yml"
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.x"
+
+      - name: Install pyyaml
+        run: pip install pyyaml
+
+      - name: Run all check.py validators
+        run: |
+          find . -name check.py -not -path './.git/*' -print0 | while IFS= read -r -d '' f; do
+            echo "=== Running $f ==="
+            python3 "$f" .
+          done
+
+      - name: Verify no secrets in committed files
+        run: |
+          # Scan for common secret patterns in YAML/compose files
+          if grep -rnE '(password|token|secret|api_key)\s*[:=]' --include='*.yml' --include='*.yaml' --include='*.env' . | grep -v '.git/' | grep -v 'APP_PASSWORD' | grep -v 'check.py' | grep -v 'README' | grep -v 'workflows/'; then
+            echo "::error::Potential secret found in committed files"
+            exit 1
+          fi
+
+      - name: Verify all images are digest-pinned
+        run: |
+          # Extract all image: lines and check for @sha256:
+          images=$(grep -rn 'image:' --include='*.yml' --include='*.yaml' . | grep -v '.git/' | grep -v 'workflows/')
+          if echo "$images" | grep -v '@sha256:' | grep -q 'image:'; then
+            echo "::error::Found image without digest pin:"
+            echo "$images" | grep -v '@sha256:' | grep 'image:'
+            exit 1
+          fi
+          echo "All images are digest-pinned"
