@@ -68,12 +68,17 @@ jobs:
       - name: Verify both architectures are present
         run: |
           set -euo pipefail
-          for arch in linux/amd64 linux/arm64; do
-            if docker buildx imagetools inspect "${IMAGE}:${PASEO_VERSION}" \
-               --format '{{json .Manifest}}' | grep -q "$arch"; then
-              echo "ok: $arch present"
-            else
-              echo "MISSING: $arch" >&2
-              exit 1
-            fi
-          done
+          MANIFEST=$(docker buildx imagetools inspect "${IMAGE}:${PASEO_VERSION}" \
+            --format '{{json .Manifest}}')
+          echo "$MANIFEST" | python3 -c "
+          import json, sys
+          manifest = json.load(sys.stdin)
+          platforms = [m.get('platform', {}) for m in manifest.get('manifests', [])]
+          archs = [p.get('architecture', '') for p in platforms]
+          expected = ['amd64', 'arm64']
+          missing = [a for a in expected if a not in archs]
+          if missing:
+              print(f'MISSING architectures: {missing}', file=sys.stderr)
+              sys.exit(1)
+          print(f'All architectures present: {archs}')
+          "
