@@ -12,12 +12,9 @@ services:
       PROXY_AUTH_ADD: "false"
 
   server:
-    # Build from the local Dockerfile instead of pulling the upstream image
-    # directly. This bakes OpenCode v2 into the image so Paseo auto-discovers
-    # it as a provider without any post-install manual steps.
-    build:
-      context: .
-      dockerfile: Dockerfile
+    # Tag and digest pinned together, per Umbrel packaging guidance. Multi-arch
+    # index digest: covers linux/amd64 and linux/arm64.
+    image: ghcr.io/getpaseo/paseo:0.11.4@sha256:0e64b56fa1f99808623f4de70321cdd292e85b6db151636c13b0e6786b0e1ba5
     restart: on-failure
     # Paseo spawns agent CLIs as child processes and needs real init for
     # reaping. The Tini "not running as PID 1" warning in logs is cosmetic.

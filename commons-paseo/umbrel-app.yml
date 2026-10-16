@@ -2,7 +2,7 @@ manifestVersion: 1
 id: commons-paseo
 category: developer
 name: Paseo
-version: "0.10.1"
+version: "0.11.4"
 tagline: The control plane for coding agents
 icon: https://raw.githubusercontent.com/getpaseo/paseo/main/packages/website/public/favicon.svg
 description: >-
@@ -37,7 +37,7 @@ releaseNotes: >-
   instead of a shared placeholder.
 
 
-  Upstream release notes: https://github.com/getpaseo/paseo/releases/tag/v0.10.1
+  Upstream release notes: https://github.com/getpaseo/paseo/releases/tag/v0.11.4
 
 developer: Paseo
 website: https://paseo.sh

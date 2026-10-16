@@ -65,22 +65,6 @@ if manifest.get("deterministicPassword"):
     if not any("APP_PASSWORD" in str(v) for v in env.values()):
         errors.append("manifest: deterministicPassword is set but compose does not wire APP_PASSWORD")
 
-# --- Dockerfile -----------------------------------------------------------
-dockerfile = HERE / "Dockerfile"
-if not dockerfile.exists():
-    errors.append("Dockerfile: missing (required for baked-in providers)")
-else:
-    df_content = dockerfile.read_text()
-    # Check base image is the pinned upstream paseo image
-    if not re.search(
-        r"FROM\s+ghcr\.io/getpaseo/paseo:[\d.]+@sha256:[0-9a-f]{64}",
-        df_content,
-    ):
-        errors.append("Dockerfile: FROM must reference ghcr.io/getpaseo/paseo:<tag>@sha256:<64hex>")
-    # Check OpenCode is installed
-    if "opencode" not in df_content.lower():
-        errors.append("dockerfile: does not install opencode (expected for baked-in provider)")
-
 # --- compose --------------------------------------------------------------
 services = compose.get("services") or {}
 if "app_proxy" not in services:
@@ -100,18 +84,23 @@ if "server" not in services:
 else:
     server = services["server"]
 
-    # With a Dockerfile build, image pinning lives in the Dockerfile, not compose.
-    # Just verify the build context is correct.
-    build = server.get("build") or {}
-    if not build:
-        errors.append("compose: server must have a build section (OpenCode is baked in via Dockerfile)")
+    image = str(server.get("image", ""))
+
+    # Tag and digest must travel together and describe the same tag.
+    if image.endswith(":latest") or ":latest@" in image:
+        errors.append("compose: image uses 'latest'; pin a version tag")
+    if "@sha256:" not in image:
+        errors.append("compose: image is not digest-pinned")
     else:
-        ctx = str(build.get("context", ""))
-        df = str(build.get("dockerfile", ""))
-        if ctx != ".":
-            errors.append(f"compose: build context is {ctx!r}, expected '.'")
-        if df != "Dockerfile":
-            errors.append(f"compose: build dockerfile is {df!r}, expected 'Dockerfile'")
+        tagged, _, digest = image.partition("@")
+        if ":" not in tagged.rsplit("/", 1)[-1]:
+            errors.append("compose: digest-pinned image must keep its version tag alongside the digest")
+        elif not re.fullmatch(r"sha256:[0-9a-f]{64}", digest):
+            errors.append("compose: digest is not a valid sha256")
+
+    # Forcing a user breaks first-run volume setup for root-then-drop entrypoints.
+    if "user" in server:
+        errors.append("compose: explicit 'user' breaks first-run volume setup on root-then-drop images")
 
     if server.get("restart") not in ("on-failure", "unless-stopped"):
         errors.append(f"compose: restart is {server.get('restart')!r}, expected on-failure or unless-stopped")
@@ -151,4 +140,4 @@ if errors:
     sys.exit(1)
 
 print(f"OK  {manifest['id']} v{manifest['version']}  port {manifest['port']}  "
-      f"image built from Dockerfile (Paseo + OpenCode)")
+      f"image {services['server']['image']}")

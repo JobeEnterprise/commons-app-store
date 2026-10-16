@@ -11,7 +11,7 @@ on:
 
 env:
   IMAGE: ghcr.io/jobeenterprise/commons-paseo
-  PASEO_VERSION: "0.10.1"
+  PASEO_VERSION: "0.11.4"
 
 jobs:
   build:

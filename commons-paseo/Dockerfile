@@ -7,7 +7,7 @@
 # OpenCode v2: https://opencode.ai/v2/install
 # Paseo native provider: https://paseo.sh/docs/providers
 
-FROM ghcr.io/getpaseo/paseo:0.10.1@sha256:4dad5ba8f36c8bad9caec033b72d11b3c14a4a5040c07fafe577e8b817814b3b
+FROM ghcr.io/getpaseo/paseo:0.11.4@sha256:0e64b56fa1f99808623f4de70321cdd292e85b6db151636c13b0e6786b0e1ba5
 
 USER root
 
