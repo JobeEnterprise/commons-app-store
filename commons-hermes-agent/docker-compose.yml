@@ -31,7 +31,6 @@ services:
   # Builds from the local Dockerfile which adds GPU drivers and the memory patch.
   web:
     build: .
-    image: commons-hermes-agent:v0.22.2
     restart: on-failure
     stop_grace_period: 1m
     volumes:
