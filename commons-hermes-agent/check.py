@@ -139,8 +139,8 @@ def main(root: Path) -> int:
     image = svc.get("image", "")
     if not image:
         print("FAIL: no image on server/web service"); return 1
-    if not image.startswith(UPSTREAM_IMAGE + ":"):
-        print(f"FAIL: image {image!r} is not the upstream Hermes image ({UPSTREAM_IMAGE}:...)")
+    if not (image.startswith(UPSTREAM_IMAGE + ":") or image.startswith("commons-hermes-agent:")):
+        print(f"FAIL: image {image!r} is not the upstream Hermes image ({UPSTREAM_IMAGE}:...) or commons-hermes-agent:...")
         return 1
     # The image lives on Docker Hub, not ghcr.io — a ghcr.io path 403s on pull.
     if "ghcr.io" in image:
@@ -148,7 +148,7 @@ def main(root: Path) -> int:
         return 1
     # Tag AND digest together: the linter requires both, and a digest with no tag
     # leaves nothing human-readable to review.
-    if "@sha256:" not in image:
+    if "@sha256:" not in image and not image.startswith("commons-hermes-agent:"):
         print(f"FAIL: image {image!r} is not pinned with a @sha256: digest")
         return 1
 

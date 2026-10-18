@@ -28,25 +28,10 @@ services:
       PROXY_AUTH_ADD: "false"
 
   # Hermes Agent gateway + dashboard + TUI, supervised by upstream s6-overlay.
-  # Uses the upstream image directly instead of getumbrel's wrapper, so we get
-  # v0.22.0 rather than the wrapper's older build. Ours is the
-  # upstream SemVer tag, digest-pinned to the multi-arch index so one pin
-  # serves both linux/amd64 and linux/arm64.
-  #
-  # NOTE: the image lives on Docker Hub, NOT ghcr.io. The release notes list it
-  # as `nousresearch/hermes-agent:v0.22.0` with no registry prefix, and a
-  # ghcr.io/... path 403s on pull.
-  #
-  # Digest is the multi-arch index digest (covers both linux/amd64 and
-  # linux/arm64), so one pin serves an x86 N5105 and a Raspberry Pi.
-  #
-  # The upstream image has no HERMES_UMBREL_APP_PROXY_AUTH hook — the getumbrel
-  # wrapper's proxy-auth bypass is replaced here with dashboard basic auth
-  # wired to the Umbrel-injected $APP_PASSWORD. Umbrel displays the password
-  # (deterministicPassword: true in manifest) and the same credential logs you
-  # into the dashboard.
+  # Builds from the local Dockerfile which adds GPU drivers and the memory patch.
   web:
-    image: nousresearch/hermes-agent:v0.22.0@sha256:c69536a39e885b8943329bda68cdf44492458b96aa74a212239bde9d2aeb406a
+    build: .
+    image: commons-hermes-agent:v0.22.2
     restart: on-failure
     stop_grace_period: 1m
     volumes:
@@ -64,4 +49,12 @@ services:
       # Upstream TUI path (wrapper overrides to /app/umbrel-tui).
       HERMES_TUI_DIR: "/opt/hermes/ui-tui"
       HERMES_GATEWAY_BOOTSTRAP_STATE: "running"
+    # GPU passthrough for Intel integrated graphics (UHD, Iris Xe).
+    # /dev/dri is the standard Linux device node for DRM/KMS GPU access.
+    devices:
+      - /dev/dri:/dev/dri
+    # Memory limit — the memory patch in the Dockerfile makes Hermes respect
+    # this cgroup limit when sizing model context windows. Adjust based on
+    # your Umbrel's RAM (16GB recommended: 8g limit, 8g for other apps).
+    mem_limit: 8g
     command: ["gateway", "run"]
