@@ -1,0 +1,30 @@
+version: "3.7"
+
+# Dockage-ready Hermes Agent
+# No Umbrel proxy, no app store packaging — direct port access.
+# Desktop app connects to http://<host-ip>:18789 with basic auth.
+
+services:
+  hermes:
+    build:
+      context: ..
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    stop_grace_period: 1m
+    ports:
+      - "18789:18789"
+    volumes:
+      - ./data:/opt/data
+    environment:
+      HERMES_UID: "1000"
+      HERMES_GID: "1000"
+      HERMES_DASHBOARD: "1"
+      HERMES_DASHBOARD_PORT: "18789"
+      HERMES_DASHBOARD_BASIC_AUTH_USERNAME: "admin"
+      HERMES_DASHBOARD_BASIC_AUTH_PASSWORD: "change-me-to-a-strong-password"
+      HERMES_TUI_DIR: "/opt/hermes/ui-tui"
+      HERMES_GATEWAY_BOOTSTRAP_STATE: "running"
+    devices:
+      - /dev/dri:/dev/dri
+    mem_limit: 8g
+    command: ["gateway", "run"]
